@@ -1,0 +1,364 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>전쟁 예측 스크리너 · 금융 융합 관점</title>
+<style>
+  :root{
+    --bg:#0f1220; --panel:#181c2e; --panel2:#20263f; --line:#2b3252;
+    --text:#e8ecf7; --muted:#9aa3c4; --accent:#5b8cff; --accent2:#7ee0c0;
+    --warn:#ffb454; --up:#ff6b6b; --down:#59d1a0; --chip:#242b45;
+  }
+  @media (prefers-color-scheme: light){
+    :root{
+      --bg:#f4f6fc; --panel:#ffffff; --panel2:#f0f3fb; --line:#e2e7f4;
+      --text:#161a2b; --muted:#5b6488; --accent:#2f66ff; --accent2:#0fae86;
+      --warn:#b9791b; --up:#d63a3a; --down:#0fae86; --chip:#eef2fc;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:system-ui,"Segoe UI",Roboto,"Malgun Gothic","맑은 고딕",sans-serif;
+    line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1040px;margin:0 auto;padding:28px 18px 80px}
+  header h1{font-size:22px;margin:0 0 4px;letter-spacing:-.2px}
+  header p{margin:0;color:var(--muted);font-size:13.5px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:18px}
+  .grid{display:grid;gap:14px}
+  @media(min-width:720px){.form-grid{grid-template-columns:repeat(4,1fr)}}
+  label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600}
+  input{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);
+    border-radius:9px;padding:9px 11px;font-size:14px;font-family:inherit}
+  input:focus{outline:2px solid var(--accent);outline-offset:0;border-color:transparent}
+  .hint{font-size:11.5px;color:var(--muted);margin-top:5px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  button{cursor:pointer;font-family:inherit;font-weight:600;border-radius:10px;border:1px solid var(--line);
+    padding:11px 18px;font-size:14px;background:var(--panel2);color:var(--text)}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  button.primary:hover{filter:brightness(1.08)} button:hover{border-color:var(--accent)}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  .sec-title{display:flex;align-items:center;gap:9px;font-size:15px;font-weight:700;margin:0 0 4px}
+  .sec-title .dot{width:9px;height:9px;border-radius:50%}
+  .src{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;margin-left:auto}
+  .src.real{background:rgba(89,209,160,.16);color:var(--down);border:1px solid rgba(89,209,160,.4)}
+  .src.sim{background:rgba(255,180,84,.16);color:var(--warn);border:1px solid rgba(255,180,84,.4)}
+  .sec-note{font-size:11.5px;color:var(--muted);margin:0 0 10px}
+  .metric{border:1px solid var(--line);border-radius:11px;background:var(--panel2);margin-top:10px;overflow:hidden}
+  .metric-head{display:flex;gap:12px;align-items:flex-start;padding:13px 15px;cursor:pointer;user-select:none}
+  .metric-head:hover{background:rgba(91,140,255,.06)}
+  .metric-val{font-variant-numeric:tabular-nums;font-weight:800;font-size:19px;min-width:82px;text-align:right}
+  .metric-txt{flex:1;font-size:13.5px}
+  .metric-txt .lead{color:var(--muted);font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+  .caret{color:var(--muted);transition:transform .15s;font-size:12px;margin-top:4px}
+  .metric.open .caret{transform:rotate(90deg)}
+  .detail{display:none;padding:0 15px 15px;font-size:12.5px;color:var(--muted)}
+  .metric.open .detail{display:block}
+  .detail table{width:100%;border-collapse:collapse;margin-top:9px;font-variant-numeric:tabular-nums}
+  .detail th,.detail td{border-bottom:1px solid var(--line);padding:5px 7px;text-align:right;font-size:12px}
+  .detail th:first-child,.detail td:first-child{text-align:left}
+  .detail .method{background:var(--panel);border:1px dashed var(--line);border-radius:8px;padding:9px 11px;margin-top:9px;color:var(--text);font-size:12px}
+  .pos{color:var(--up)} .neg{color:var(--down)}
+  .banner{font-size:12px;color:var(--muted);background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px 12px;margin-top:14px}
+  .banner.err{color:var(--up);border-color:var(--up)}
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);opacity:0;
+    background:var(--text);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:13px;font-weight:600;
+    transition:.25s;pointer-events:none;z-index:20}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .warnbox{color:var(--warn);font-size:12.5px;margin-top:8px;font-weight:600}
+  .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--muted);border-top-color:transparent;
+    border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:7px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  footer{color:var(--muted);font-size:11.5px;margin-top:26px;text-align:center}
+  .share-area{width:100%;margin-top:10px;background:var(--panel2);border:1px solid var(--line);color:var(--muted);
+    border-radius:9px;padding:10px;font-size:12px;font-family:ui-monospace,Consolas,monospace;min-height:70px;display:none}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>🛰️ 전쟁 예측 스크리너</h1>
+    <p>예측 기준일을 정하면 그 날까지의 과거 데이터(주식·예측시장 실측 + 뉴스 시뮬)를 금융 융합 관점으로 스크리닝해 전쟁 긴장 신호를 수치화합니다.</p>
+  </header>
+
+  <section class="card">
+    <div class="sec-title"><span class="dot" style="background:var(--accent)"></span>입력 · 스크리닝 조건</div>
+    <div class="grid form-grid" style="margin-top:12px">
+      <div>
+        <label for="targetDate">예측 기준일 (이 날의 전쟁을 예측)</label>
+        <input type="date" id="targetDate" value="2026-04-30" min="2025-02-01" max="2026-06-25"/>
+        <div class="hint">이 날로부터 과거 데이터를 분석</div>
+      </div>
+      <div>
+        <label for="nStock">주식 — 과거 기간 (일)</label>
+        <input type="number" id="nStock" value="30" min="6" max="120"/>
+        <div class="hint">야후 · 기준일까지 과거 거래일</div>
+      </div>
+      <div>
+        <label for="nPoly">예측시장 — 과거 기간 (일)</label>
+        <input type="number" id="nPoly" value="30" min="6" max="120"/>
+        <div class="hint">폴리마켓 · 기준일까지 과거</div>
+      </div>
+      <div>
+        <label for="nNews">뉴스 — 과거 기간 (일)</label>
+        <input type="number" id="nNews" value="30" min="6" max="120"/>
+        <div class="hint">기준일까지 과거 (시뮬)</div>
+      </div>
+    </div>
+    <div class="grid form-grid" style="margin-top:12px">
+      <div style="grid-column:span 2">
+        <label for="polyKw">예측시장 키워드 (폴리마켓)</label>
+        <input type="text" id="polyKw" value="이란" placeholder="예: 이란, 대만, 러시아, Iran, strike"/>
+        <div class="hint">한국어·영문 모두 가능 (한국어는 자동 영문 변환 후 검색)</div>
+      </div>
+      <div style="grid-column:span 2">
+        <label for="newsKw">뉴스 키워드 셋 (쉼표 구분)</label>
+        <input type="text" id="newsKw" value="도발, 위협, 이란" placeholder="예: 도발, 위협, 이란"/>
+        <div class="hint">하나라도 포함하는 기사를 카운트 (시뮬)</div>
+      </div>
+    </div>
+    <div class="row" style="margin-top:16px">
+      <button class="primary" id="runBtn">스크리닝 실행 ▶</button>
+      <button id="csvBtn" disabled>CSV 내보내기</button>
+      <button id="shareBtn" disabled>본문 공유</button>
+    </div>
+    <div id="warn" class="warnbox"></div>
+    <div id="status" class="hint"></div>
+    <textarea class="share-area" id="shareArea" readonly></textarea>
+  </section>
+
+  <div id="results"></div>
+
+  <footer>
+    데이터 · 주식=야후파이낸스 일봉 실측(수익률·거래량), 예측시장=폴리마켓 실측(확률=prices-history, 거래량=trades 합산),
+    뉴스=결정론적 시뮬레이션. 과거 일별 옵션 총거래량은 무료 미제공이라 주식 거래량으로 대체.
+  </footer>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== 공통 수식 ===== */
+const mean=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
+function pearson(x,y){const n=Math.min(x.length,y.length);if(n<2)return 0;
+  const mx=mean(x.slice(0,n)),my=mean(y.slice(0,n));let sxy=0,sx=0,sy=0;
+  for(let i=0;i<n;i++){const dx=x[i]-mx,dy=y[i]-my;sxy+=dx*dy;sx+=dx*dx;sy+=dy*dy;}
+  const d=Math.sqrt(sx*sy);return d===0?0:sxy/d;}
+function splitHalf(n){const h=Math.floor(n/2);return {first:[0,h],second:[n-h,n]};}
+const sliceMean=(a,r)=>mean(a.slice(r[0],r[1]));
+
+/* ===== 뉴스 시뮬레이션 (임의 날짜 대응, 결정론적) ===== */
+function mulberry32(s){return function(){s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);
+  t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296;};}
+function hashSeed(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+function gaussFrom(str){const r=mulberry32(hashSeed(str));let u=0,v=0;while(!u)u=r();while(!v)v=r();
+  return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+const KW_BASE={'이란':120,'도발':70,'위협':85,'공습':60,'미국':140,'전쟁':95,'협정':55,'핵':50};
+const kwBase=k=>KW_BASE[k]!=null?KW_BASE[k]:45;
+function newsSeries(dates,keywords){
+  const dayNum=d=>Math.round(new Date(d+'T00:00:00Z').getTime()/864e5);
+  const latent=dates.map(d=>{const n=dayNum(d);
+    return Math.max(.05,.35+.22*Math.sin(n/9.0)+.14*Math.sin(n/23.0+1)+gaussFrom('lt'+d)*0.08);});
+  const mention=[],search=[];
+  dates.forEach((d,i)=>{let m=0,s=0;const lp=latent[Math.max(0,i-1)];
+    keywords.forEach(k=>{const b=kwBase(k);
+      m+=b*(1+2.2*latent[i])*(1+gaussFrom('nm'+d+k)*0.18);
+      s+=b*0.8*(1+2.0*lp)*(1+gaussFrom('ns'+d+k)*0.22);});   // 검색은 1일 지연
+    mention.push(Math.max(0,Math.round(m)));search.push(Math.max(0,Math.round(s)));});
+  return {dates,keywords,mention,search};
+}
+
+/* ===== 분석 ===== */
+function sectorSeries(sect){const n=sect[0].ret.length;const ret=[],vol=[];
+  for(let i=0;i<n;i++){ret.push(mean(sect.map(s=>s.ret[i])));vol.push(mean(sect.map(s=>s.vol[i])));}
+  return {ret,vol};}
+function sectorCross(sect,sp){const pts=sect.map(s=>{
+  const fRet=sliceMean(s.ret,sp.first),sRet=sliceMean(s.ret,sp.second);
+  const fVol=sliceMean(s.vol,sp.first),sVol=sliceMean(s.vol,sp.second);
+  return {ticker:s.ticker,retChg:sRet-fRet,volChgRate:fVol?(sVol-fVol)/fVol:0};});
+  return {r:pearson(pts.map(p=>p.retChg),pts.map(p=>p.volChgRate)),pts};}
+
+function analyze(stock,poly,news,cfg){
+  const o={cfg,stock:{meta:stock.meta,dates:stock.dates},poly:{meta:poly.meta},news:{}};
+  // 주식
+  const sp=splitHalf(stock.dates.length);
+  o.stock.defenseCross=sectorCross(stock.defense,sp);
+  o.stock.energyCross=sectorCross(stock.energy,sp);
+  const dSer=sectorSeries(stock.defense),eSer=sectorSeries(stock.energy);
+  o.stock.corrRet=pearson(dSer.ret,eSer.ret);
+  o.stock.corrVol=pearson(dSer.vol,eSer.vol);
+  o.stock.similarity=(o.stock.corrRet+o.stock.corrVol)/2;
+  o.stock.dSer=dSer;o.stock.eSer=eSer;o.stock.volLabel=stock.meta.volLabel||'거래량';
+  // 예측시장
+  const nd=poly.dates.length,mk=poly.markets;
+  const totalVol=[],wProb=[];
+  for(let i=0;i<nd;i++){let v=0,pw=0,ps=0;
+    mk.forEach(m=>{v+=m.vol[i];pw+=m.warProb[i]*m.vol[i];ps+=m.warProb[i];});
+    totalVol.push(v);wProb.push(v>0?pw/v:(mk.length?ps/mk.length:0));}
+  const spP=splitHalf(nd);
+  const vF=sliceMean(totalVol,spP.first),vS=sliceMean(totalVol,spP.second);
+  const pF=sliceMean(wProb,spP.first),pS=sliceMean(wProb,spP.second);
+  o.poly={...o.poly,dates:poly.dates,markets:mk,keyword:poly.keyword,fallback:poly.fallback,
+    totalVol,wProb,vF,vS,volChgRate:vF?(vS-vF)/vF:0,pF,pS,probChgRate:pF?(pS-pF)/pF:0,
+    corr:pearson(totalVol,wProb)};
+  // 뉴스
+  const spN=splitHalf(news.dates.length);
+  const mF=sliceMean(news.mention,spN.first),mS=sliceMean(news.mention,spN.second);
+  const sF=sliceMean(news.search,spN.first),sS=sliceMean(news.search,spN.second);
+  o.news={dates:news.dates,keywords:news.keywords,mention:news.mention,search:news.search,
+    mF,mS,mentionChgRate:mF?(mS-mF)/mF:0,sF,sS,searchChgRate:sF?(sS-sF)/sF:0,
+    corr:pearson(news.mention,news.search)};
+  return o;
+}
+
+/* ===== 표현 ===== */
+function corrWord(r){const a=Math.abs(r),s=r>=0?'양(+)':'음(−)';
+  return (a>=0.6?'강한':a>=0.3?'뚜렷한':a>=0.1?'약한':'미미한')+' '+s;}
+const pct=x=>(x*100).toFixed(1)+'%';
+const signPct=x=>`<span class="${x>=0?'pos':'neg'}">${pct(Math.abs(x))} ${x>=0?'▲ 증가':'▼ 감소'}</span>`;
+const money=x=>'$'+Math.round(x).toLocaleString('en-US');
+const num=x=>x.toLocaleString('en-US',{maximumFractionDigits:0});
+
+let LAST=null;
+function metric(lead,valHtml,sentence,detailHtml){
+  return `<div class="metric"><div class="metric-head" onclick="this.parentNode.classList.toggle('open')">
+    <span class="caret">▶</span><div class="metric-txt"><div class="lead">${lead}</div>${sentence}</div>
+    <div class="metric-val">${valHtml}</div></div><div class="detail">${detailHtml}</div></div>`;}
+function crossTable(cross,volLabel){
+  const rows=cross.pts.map(p=>`<tr><td>${p.ticker}</td>
+    <td>${p.retChg>=0?'+':''}${p.retChg.toFixed(3)}%p</td>
+    <td>${p.volChgRate>=0?'+':''}${(p.volChgRate*100).toFixed(1)}%</td></tr>`).join('');
+  return `<table><tr><th>종목</th><th>수익률 변화(후−전)</th><th>${volLabel} 변화율</th></tr>${rows}</table>`;}
+
+function render(o){
+  const s=o.stock,p=o.poly,nw=o.news,vl=s.volLabel;
+  const sd=`${s.dates[0]} ~ ${s.dates[s.dates.length-1]} · ${s.dates.length}거래일`;
+
+  const st1=metric('주식 · 방산 섹터',s.defenseCross.r.toFixed(2),
+    `방산 5개 종목의 <b>수익률 변화</b>와 <b>${vl} 변화율</b> 사이 상관계수는 <b>${s.defenseCross.r.toFixed(2)}</b> — ${corrWord(s.defenseCross.r)} 상관입니다.`,
+    `<div class="method">전반부 대비 후반부의 종목별 (수익률 변화, ${vl} 변화율)에 대한 섹터 내 5종목 <b>횡단면 상관</b>. 실측 출처: ${s.meta.source}. 기간: ${sd}</div>${crossTable(s.defenseCross,vl)}`);
+  const st2=metric('주식 · 에너지 섹터',s.energyCross.r.toFixed(2),
+    `에너지 5개 종목의 <b>수익률 변화</b>와 <b>${vl} 변화율</b> 사이 상관계수는 <b>${s.energyCross.r.toFixed(2)}</b> — ${corrWord(s.energyCross.r)} 상관입니다.`,
+    `<div class="method">방산과 동일 방식. 기간: ${sd}</div>${crossTable(s.energyCross,vl)}`);
+  const st3=metric('주식 · 섹터 간 동조화',s.similarity.toFixed(2),
+    `방산·에너지 두 섹터의 <b>일자별 동조화 지수</b>는 <b>${s.similarity.toFixed(2)}</b> 입니다 (${corrWord(s.similarity)} 동조).`,
+    `<div class="method">섹터 대표(ETF) 일자별 시계열 상관의 평균.<br>· 수익률 시계열 상관 = <b>${s.corrRet.toFixed(2)}</b><br>· ${vl} 시계열 상관 = <b>${s.corrVol.toFixed(2)}</b><br>· 동조화 지수 = 산술평균 = <b>${s.similarity.toFixed(2)}</b></div>`);
+
+  const mkRows=p.markets.map(m=>{const vs=m.vol.reduce((a,b)=>a+b,0);
+    return `<tr><td>${m.name}</td><td>${m.direction==='war'?'전쟁↑':'평화(1−p)'}</td><td>${money(vs)}<br><span style="color:var(--muted);font-size:11px">전체 ${money(m.totalVolume)}</span></td></tr>`;}).join('');
+  const pd=`${p.dates[0]} ~ ${p.dates[p.dates.length-1]} · ${p.dates.length}일`;
+  const pv1=metric('예측시장 · 거래량',`${p.volChgRate>=0?'+':''}${pct(p.volChgRate)}`,
+    `'${p.keyword}' 관련 시장의 총 거래량은 전반부 대비 후반부에 ${signPct(p.volChgRate)}했습니다.`,
+    `<div class="method">전반부 평균 ${money(p.vF)} → 후반부 평균 ${money(p.vS)}${p.fallback?'<br>⚠ 키워드 매칭 시장이 없어 결과가 비었을 수 있습니다.':''}<br>실측 출처: ${p.meta.source} · 기간 ${pd}</div>
+     <table><tr><th>집계 시장 (${p.markets.length})</th><th>방향</th><th>기간 거래량<br>(전체)</th></tr>${mkRows}</table>`);
+  const pv2=metric('예측시장 · 전쟁 확률',`${p.probChgRate>=0?'+':''}${pct(p.probChgRate)}`,
+    `거래량 가중 <b>전쟁 발생 확률</b>은 전반부 대비 후반부에 ${signPct(p.probChgRate)}했습니다.`,
+    `<div class="method">시장별 확률(Yes 가격)을 거래량 가중 평균하며, 평화 방향 시장은 (1−p)로 뒤집어 <b>전쟁 기준 정규화</b>.<br>전반부 ${(p.pF*100).toFixed(1)}% → 후반부 ${(p.pS*100).toFixed(1)}%</div>`);
+  const pv3=metric('예측시장 · 상관관계',p.corr.toFixed(2),
+    `일자별 <b>총 거래량</b>과 <b>전쟁 확률</b>은 상관계수 <b>${p.corr.toFixed(2)}</b> — ${corrWord(p.corr)} 상관입니다.`,
+    `<div class="method">기간 내 일자별 (총 거래량, 가중 전쟁확률) 시계열의 피어슨 상관. 기간: ${pd}</div>`);
+
+  const nd=`${nw.dates[0]} ~ ${nw.dates[nw.dates.length-1]} · ${nw.dates.length}일`;
+  const nw1=metric('뉴스 · 언급량',`${nw.mentionChgRate>=0?'+':''}${pct(nw.mentionChgRate)}`,
+    `키워드 셋(${nw.keywords.join(', ')})의 <b>기사 언급량</b>은 전반부 대비 후반부에 ${signPct(nw.mentionChgRate)}했습니다.`,
+    `<div class="method">키워드 중 하나라도 포함하는 기사 수의 일자별 집계(시뮬).<br>전반부 평균 ${nw.mF.toFixed(0)}건 → 후반부 평균 ${nw.mS.toFixed(0)}건 · 기간 ${nd}</div>`);
+  const nw2=metric('뉴스 · 검색량',`${nw.searchChgRate>=0?'+':''}${pct(nw.searchChgRate)}`,
+    `동일 키워드 셋의 <b>검색량</b>은 전반부 대비 후반부에 ${signPct(nw.searchChgRate)}했습니다.`,
+    `<div class="method">전반부 평균 ${nw.sF.toFixed(0)} → 후반부 평균 ${nw.sS.toFixed(0)} (검색은 언급 대비 약 1일 지연)</div>`);
+  const nw3=metric('뉴스 · 상관관계',nw.corr.toFixed(2),
+    `일자별 <b>언급량</b>과 <b>검색량</b>은 상관계수 <b>${nw.corr.toFixed(2)}</b> — ${corrWord(nw.corr)} 상관입니다.`,
+    `<div class="method">기간 내 일자별 (언급량, 검색량) 시계열의 피어슨 상관.</div>`);
+
+  document.getElementById('results').innerHTML=`
+    <section class="card"><div class="sec-title"><span class="dot" style="background:#5b8cff"></span>📈 주식 — 방산·에너지<span class="src real">실측 · Yahoo</span></div>
+      <div class="sec-note">${s.meta.note||''}</div>${st1}${st2}${st3}</section>
+    <section class="card"><div class="sec-title"><span class="dot" style="background:#7ee0c0"></span>🎲 예측시장 — 폴리마켓<span class="src real">확률 실측 · 거래량 추정</span></div>
+      <div class="sec-note">${p.meta.note||''}</div>${pv1}${pv2}${pv3}</section>
+    <section class="card"><div class="sec-title"><span class="dot" style="background:#ffb454"></span>📰 뉴스 — 언급·검색<span class="src sim">시뮬레이션</span></div>
+      <div class="sec-note">무료 뉴스/검색량 과거 데이터 한계로 결정론적 시뮬레이션 사용.</div>${nw1}${nw2}${nw3}
+      <div class="banner">다음 단계 예정 · 위 9개 신호를 <b>상호가중법</b>으로 종합해 날짜별 최종 전쟁 확률을 산출하는 기능이 이어서 추가됩니다.</div></section>`;
+}
+
+/* ===== 요약 · CSV ===== */
+function summaryLines(o){const s=o.stock,p=o.poly,nw=o.news,vl=s.volLabel;
+  return [
+    `[주식1] 방산 수익률변화↔${vl}변화율 상관: ${s.defenseCross.r.toFixed(2)} (${corrWord(s.defenseCross.r)})`,
+    `[주식2] 에너지 수익률변화↔${vl}변화율 상관: ${s.energyCross.r.toFixed(2)} (${corrWord(s.energyCross.r)})`,
+    `[주식3] 방산·에너지 섹터 간 동조화: ${s.similarity.toFixed(2)} (수익률 ${s.corrRet.toFixed(2)}, ${vl} ${s.corrVol.toFixed(2)} 평균)`,
+    `[예측1] '${p.keyword}' 시장 총거래량 변화율: ${(p.volChgRate*100).toFixed(1)}%`,
+    `[예측2] 거래량가중 전쟁확률 변화율: ${(p.probChgRate*100).toFixed(1)}%`,
+    `[예측3] 거래량↔전쟁확률 일자별 상관: ${p.corr.toFixed(2)} (${corrWord(p.corr)})`,
+    `[뉴스1] 키워드셋(${nw.keywords.join('/')}) 언급량 변화율: ${(nw.mentionChgRate*100).toFixed(1)}%`,
+    `[뉴스2] 키워드셋 검색량 변화율: ${(nw.searchChgRate*100).toFixed(1)}%`,
+    `[뉴스3] 언급량↔검색량 일자별 상관: ${nw.corr.toFixed(2)} (${corrWord(nw.corr)})`];}
+const csvEsc=v=>{v=String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+function buildCSV(o){const s=o.stock,p=o.poly,nw=o.news,c=o.cfg,L=[];
+  L.push(['# 전쟁 예측 스크리너 결과']);
+  L.push(['예측 기준일',c.targetStr],['과거 기간(주식/예측/뉴스)',`${c.nStock}/${c.nPoly}/${c.nNews}일`],
+    ['주식 출처',s.meta.source],['예측시장 출처',p.meta.source],['뉴스','시뮬레이션']);
+  L.push(['예측시장 키워드',p.keyword],['뉴스 키워드셋',nw.keywords.join(' / ')]);L.push([]);
+  L.push(['# 9개 분석 결과'],['지표','값']);
+  summaryLines(o).forEach(l=>{const i=l.indexOf(']');L.push([l.slice(1,i),l.slice(i+2)]);});L.push([]);
+  L.push(['# 주식 일별(실측)'],['날짜','방산_수익률%','방산_'+s.volLabel,'에너지_수익률%','에너지_'+s.volLabel]);
+  s.dates.forEach((d,i)=>L.push([d,s.dSer.ret[i].toFixed(3),Math.round(s.dSer.vol[i]),s.eSer.ret[i].toFixed(3),Math.round(s.eSer.vol[i])]));L.push([]);
+  L.push(['# 예측시장 일별(실측)'],['날짜','총거래량$','가중전쟁확률']);
+  p.dates.forEach((d,i)=>L.push([d,Math.round(p.totalVol[i]),(p.wProb[i]*100).toFixed(2)+'%']));L.push([]);
+  L.push(['# 뉴스 일별(시뮬)'],['날짜','언급량','검색량']);
+  nw.dates.forEach((d,i)=>L.push([d,nw.mention[i],nw.search[i]]));
+  return L.map(r=>r.map(csvEsc).join(',')).join('\r\n');}
+
+/* ===== 실행 ===== */
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800);}
+function readCfg(){
+  const targetStr=document.getElementById('targetDate').value;
+  const nStock=+document.getElementById('nStock').value,nPoly=+document.getElementById('nPoly').value,nNews=+document.getElementById('nNews').value;
+  const w=document.getElementById('warn');w.textContent='';
+  if(!targetStr){w.textContent='⚠ 예측 기준일을 선택하세요.';return null;}
+  for(const [n,name] of [[nStock,'주식'],[nPoly,'예측시장'],[nNews,'뉴스']])
+    if(!(n>=6)){w.textContent=`⚠ ${name} 과거 기간은 최소 6일 이상이어야 합니다.`;return null;}
+  return {targetStr,nStock,nPoly,nNews,
+    polyKw:document.getElementById('polyKw').value.trim(),
+    newsKw:document.getElementById('newsKw').value};
+}
+async function fetchJSON(url){const r=await fetch(url);const j=await r.json();
+  if(!r.ok||j.error)throw new Error(j.error||('HTTP '+r.status));return j;}
+function dateRange(start,days){const out=[];const d0=new Date(start+'T00:00:00Z');
+  for(let i=0;i<days;i++){const d=new Date(d0);d.setUTCDate(d.getUTCDate()+i);out.push(d.toISOString().slice(0,10));}return out;}
+// 기준일로부터 과거 days일 윈도의 시작일 (윈도는 기준일에 끝남)
+function backDate(target,days){const d=new Date(target+'T00:00:00Z');d.setUTCDate(d.getUTCDate()-(days-1));return d.toISOString().slice(0,10);}
+
+async function run(){
+  const cfg=readCfg();if(!cfg)return;
+  if(location.protocol==='file:'){
+    document.getElementById('warn').innerHTML='⚠ 실측 데이터는 로컬 서버가 필요합니다. 터미널에서 <b>python server.py</b> 실행 후 <b>http://localhost:8787</b> 로 여세요.';
+    return;}
+  const st=document.getElementById('status'),btn=document.getElementById('runBtn');
+  btn.disabled=true;st.innerHTML='<span class="spin"></span>실측 데이터 수집 중… (예측시장 거래량 합산은 수십 초 걸릴 수 있어요)';
+  try{
+    const stockStart=backDate(cfg.targetStr,cfg.nStock),polyStart=backDate(cfg.targetStr,cfg.nPoly),newsStart=backDate(cfg.targetStr,cfg.nNews);
+    const [stock,poly]=await Promise.all([
+      fetchJSON(`/api/stock?start=${stockStart}&days=${cfg.nStock}`),
+      fetchJSON(`/api/poly?keyword=${encodeURIComponent(cfg.polyKw)}&start=${polyStart}&days=${cfg.nPoly}`)]);
+    if(!stock.dates||stock.dates.length<4)throw new Error('주식 거래일이 부족합니다. 과거 기간을 늘리거나 기준일을 조정하세요.');
+    if(!poly.markets||poly.markets.length===0)throw new Error(`'${cfg.polyKw}' 키워드로 기준일 이전 기간에 맞는 폴리마켓 시장을 찾지 못했습니다. 키워드(영문)나 기준일/기간을 바꿔보세요.`);
+    const news=newsSeries(dateRange(newsStart,cfg.nNews),cfg.newsKw.split(',').map(x=>x.trim()).filter(Boolean));
+    LAST=analyze(stock,poly,news,cfg);render(LAST);
+    document.getElementById('csvBtn').disabled=false;document.getElementById('shareBtn').disabled=false;
+    st.textContent=`완료 · 기준일 ${cfg.targetStr} · 주식 ${stock.dates.length}거래일, 예측시장 ${poly.markets.length}개 시장`;
+    document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+  }catch(e){
+    document.getElementById('results').innerHTML=`<div class="card banner err">데이터 수집 실패: ${e.message}</div>`;
+    st.textContent='';
+  }finally{btn.disabled=false;}
+}
+document.getElementById('runBtn').addEventListener('click',run);
+document.getElementById('csvBtn').addEventListener('click',()=>{if(!LAST)return;
+  const blob=new Blob(['﻿'+buildCSV(LAST)],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`전쟁예측_기준일${LAST.cfg.targetStr}.csv`;a.click();
+  URL.revokeObjectURL(a.href);toast('CSV를 내보냈습니다');});
+document.getElementById('shareBtn').addEventListener('click',async()=>{if(!LAST)return;
+  const c=LAST.cfg;
+  const text=`🛰️ 전쟁 예측 스크리너 결과\n예측 기준일 ${c.targetStr} · 과거 주식 ${c.nStock}일/예측 ${c.nPoly}일/뉴스 ${c.nNews}일\n(주식·예측시장=실측, 뉴스=시뮬)\n\n`+summaryLines(LAST).join('\n');
+  try{if(navigator.share){await navigator.share({title:'전쟁 예측 스크리너 결과',text});toast('공유했습니다');return;}}
+  catch(e){if(e&&e.name==='AbortError')return;}
+  try{await navigator.clipboard.writeText(text);toast('본문을 클립보드에 복사했습니다');}
+  catch(e){const ta=document.getElementById('shareArea');ta.style.display='block';ta.value=text;ta.focus();ta.select();toast('아래 본문을 복사하세요');}});
+
+if(location.protocol!=='file:')run();
+else document.getElementById('warn').innerHTML='⚠ 실측 데이터는 로컬 서버가 필요합니다. 터미널에서 <b>python server.py</b> 실행 후 <b>http://localhost:8787</b> 로 여세요.';
+</script>
